@@ -1,73 +1,45 @@
 package com.example.librarymanager
 
-import android.app.DownloadManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.librarymanager.data.FileItem
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var storage: FirebaseStorage
-    private lateinit var pickPdfLauncher: ActivityResultLauncher<Intent>
-    private lateinit var filesRecyclerView: RecyclerView
-    private lateinit var fileAdapter: FileAdapter
-    private val files = mutableListOf<FileItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
         auth = FirebaseAuth.getInstance()
-        storage = FirebaseStorage.getInstance()
 
         val logoutButton = findViewById<Button>(R.id.logoutButton)
+        val viewItemsButton = findViewById<Button>(R.id.viewItemsButton)
         val uploadPdfButton = findViewById<Button>(R.id.uploadPdfButton)
-        filesRecyclerView = findViewById(R.id.filesRecyclerView)
-
-        fileAdapter = FileAdapter(this, files) { fileItem ->
-            startDownload(fileItem.downloadUrl, fileItem.fileName)
-        }
-        filesRecyclerView.layoutManager = LinearLayoutManager(this)
-        filesRecyclerView.adapter = fileAdapter
 
         logoutButton.setOnClickListener {
             logout()
         }
 
-        // Initialize the PDF picker launcher
-        pickPdfLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                val filePath = result.data?.data
-                if (filePath != null) {
-                    uploadFile(filePath)
-                }
-            }
+        viewItemsButton.setOnClickListener {
+            val intent = Intent(this, DisplayItemsActivity::class.java)
+            startActivity(intent)
         }
 
         uploadPdfButton.setOnClickListener {
-            // Start an intent to pick a PDF
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "application/pdf"
-            pickPdfLauncher.launch(intent)
+            // Handle PDF upload functionality
+            selectImageForUpload()
         }
-
-        // Load the list of files from Firebase Storage
-        loadFilesFromStorage()
     }
 
     private fun logout() {
@@ -78,52 +50,76 @@ class HomeActivity : AppCompatActivity() {
         finish() // Close the HomeActivity
     }
 
-    private fun uploadFile(uri: Uri) {
-        val storageRef = storage.reference
-        val pdfRef = storageRef.child("pdfs/${uri.lastPathSegment}")
-        val uploadTask = pdfRef.putFile(uri)
+    private fun selectImageForUpload() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, REQUEST_CODE_SELECT_IMAGE)
+    }
 
-        uploadTask.addOnSuccessListener {
-            // File uploaded successfully
-            Toast.makeText(this, "File uploaded", Toast.LENGTH_SHORT).show()
-            loadFilesFromStorage()
-        }.addOnFailureListener {
-            // Handle unsuccessful uploads
-            Toast.makeText(this, "File upload failed: ${it.message}", Toast.LENGTH_SHORT).show()
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_SELECT_IMAGE && resultCode == RESULT_OK) {
+            val imageUri = data?.data
+            if (imageUri != null) {
+                // Show a dialog to enter name, description, and price
+                showUploadDialog(imageUri)
+            }
         }
     }
 
-    private fun loadFilesFromStorage() {
-        val storageRef = storage.reference.child("pdfs")
-        storageRef.listAll().addOnSuccessListener { listResult ->
-            files.clear()
-            for (item in listResult.items) {
-                item.downloadUrl.addOnSuccessListener { uri ->
-                    val author = item.name
-                    val fileName = item.name
-                    val downloadUrl = uri.toString()
-                    files.add(FileItem(author, fileName, downloadUrl))
-                    fileAdapter.notifyDataSetChanged()
+    private fun showUploadDialog(imageUri: Uri) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_upload, null)
+        val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
+        val descriptionEditText = dialogView.findViewById<EditText>(R.id.descriptionEditText)
+        val priceEditText = dialogView.findViewById<EditText>(R.id.priceEditText)
+
+        AlertDialog.Builder(this)
+            .setTitle("Upload Image")
+            .setView(dialogView)
+            .setPositiveButton("Upload") { _, _ ->
+                val name = nameEditText.text.toString()
+                val description = descriptionEditText.text.toString()
+                val price = priceEditText.text.toString()
+                uploadImageToStorage(name, description, price, imageUri)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun uploadImageToStorage(name: String, description: String, price: String, imageUri: Uri) {
+        val storageRef = FirebaseStorage.getInstance().reference.child("images/${UUID.randomUUID()}.jpg")
+        val uploadTask = storageRef.putFile(imageUri)
+
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
                 }
             }
-        }.addOnFailureListener {
-            // Handle any errors
-            Toast.makeText(this, "Failed to load files: ${it.message}", Toast.LENGTH_SHORT).show()
+            storageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+                val fileItem = FileItem(name, description, price, downloadUri.toString())
+                saveFileToFirestore(fileItem)
+            } else {
+                Toast.makeText(this, "Upload failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun startDownload(url: String, fileName: String) {
-        val request = DownloadManager.Request(Uri.parse(url))
-            .setTitle(fileName)
-            .setDescription("Downloading PDF")
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-            .setAllowedOverMetered(true)
-            .setAllowedOverRoaming(true)
+    private fun saveFileToFirestore(fileItem: FileItem) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("files").add(fileItem)
+            .addOnSuccessListener {
+                Toast.makeText(this, "File uploaded and data saved.", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to save file data.", Toast.LENGTH_SHORT).show()
+            }
+    }
 
-        val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        downloadManager.enqueue(request)
-
-        Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
+    companion object {
+        private const val REQUEST_CODE_SELECT_IMAGE = 100
     }
 }

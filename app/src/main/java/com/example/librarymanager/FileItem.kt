@@ -1,3 +1,8 @@
-package com.example.librarymanager.data
+package com.example.librarymanager
 
-data class FileItem(val author: String, val fileName: String, val downloadUrl: String)
+data class FileItem(
+    val name: String = "",
+    val description: String = "",
+    val price: String = "",
+    val imageUrl: String = ""
+)
