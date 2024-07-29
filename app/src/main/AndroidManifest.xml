@@ -25,6 +25,8 @@
 
          <activity android:name=".DisplayItemsActivity" />
 
+        <activity android:name=".BookDetailsActivity" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

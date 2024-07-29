@@ -54,12 +54,30 @@ class DisplayItemsActivity : AppCompatActivity() {
                             val description = document.getString("description") ?: "No description"
                             val price = document.getString("price") ?: "No price"
                             val imageUrl = document.getString("imageUrl") ?: ""
+
                             files.add(FileItem(fileName, description, price, imageUrl))
                             fileAdapter.notifyDataSetChanged()
                         } else {
                             Toast.makeText(this, "No metadata found for $fileName", Toast.LENGTH_SHORT).show()
                         }
                     }
+
+                    .addOnSuccessListener { document ->
+                        if (document != null) {
+                            val description = document.getString("description") ?: "No description"
+                            val price = document.getString("price") ?: "No price"
+                            val imageUrl = document.getString("imageUrl") ?: ""
+
+                            // Log the data or show a toast
+                            Toast.makeText(this, "Desc: $description, Price: $price, Image: $imageUrl", Toast.LENGTH_LONG).show()
+
+                            files.add(FileItem(fileName, description, price, imageUrl))
+                            fileAdapter.notifyDataSetChanged()
+                        } else {
+                            Toast.makeText(this, "No metadata found for $fileName", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
                     .addOnFailureListener {
                         Toast.makeText(this, "Failed to retrieve metadata.", Toast.LENGTH_SHORT).show()
                     }
