@@ -37,19 +37,19 @@ android {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-storage-ktx")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation ("androidx.recyclerview:recyclerview:1.2.1")
-    implementation ("com.github.bumptech.glide:glide:4.15.1")
-    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.androidx.recyclerview)
+    implementation (libs.androidx.recyclerview.v121)
+    implementation (libs.glide)
+    annotationProcessor (libs.compiler)
 
     /*implementation ("com.github.bumptech.glide:glide:4.12.0")*/
     implementation(libs.firebase.inappmessaging)
-    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
-    implementation("com.google.firebase:firebase-storage-ktx") // Add Firebase Storage dependency
+    annotationProcessor (libs.compiler.v4120)
+    implementation(libs.google.firebase.storage.ktx) // Add Firebase Storage dependency
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

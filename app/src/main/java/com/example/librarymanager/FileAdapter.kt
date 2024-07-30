@@ -28,11 +28,10 @@ class FileAdapter(
             priceTextView.text = fileItem.price
 
             // Load image using Glide
-            Glide.with(context)
-                .load(fileItem.imageUrl)
+            Glide.with(context).load(fileItem.imageUrl).into(imageView)
                /* .placeholder(R.drawable.placeholder_image) // Optional: placeholder while loading
                 .error(R.drawable.error_image) // Optional: error image if loading fails*/
-                .into(imageView)
+
 
             itemView.setOnClickListener {
                 // Pass the clicked item to the click listener

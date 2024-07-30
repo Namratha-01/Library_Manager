@@ -40,14 +40,19 @@ class BookDetailsActivity : AppCompatActivity() {
 
         // Retrieve and set book details from the intent
         val title = intent.getStringExtra("title") ?: "No Title"
-        val description = intent.getStringExtra("description") ?: "No Description"
-        val price = intent.getStringExtra("price") ?: "No Price"
-        val imageUrl = intent.getStringExtra("imageUrl") ?: ""
-
         titleTextView.text = title
+        val description = intent.getStringExtra("description") ?: "No Description"
         descriptionTextView.text = description
+        val price = intent.getStringExtra("price") ?: "No Price"
         priceTextView.text = price
+                val imageUrl = intent.getStringExtra("imageUrl") ?: ""
         Glide.with(this).load(imageUrl).into(bookImageView)
+
+
+
+
+
+
 
         // Check for SMS permissions
         checkPermissions()
