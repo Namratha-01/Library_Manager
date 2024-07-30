@@ -1,8 +1,12 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".BookDetailsActivity">
 
+    <!-- Book Details Section -->
     <ImageView
         android:id="@+id/bookImageView"
         android:layout_width="match_parent"
@@ -13,7 +17,6 @@
         android:id="@+id/bookTitleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/bookImageView"
         android:layout_marginTop="16dp"
         android:textSize="24sp"
         android:textStyle="bold" />
@@ -22,15 +25,55 @@
         android:id="@+id/bookDescriptionTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/bookTitleTextView"
         android:layout_marginTop="8dp" />
 
     <TextView
         android:id="@+id/bookPriceTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/bookDescriptionTextView"
         android:layout_marginTop="8dp"
         android:textSize="18sp"
         android:textColor="@android:color/holo_red_dark" />
-</RelativeLayout>
+
+    <!-- Divider line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="16dp"
+        android:background="@android:color/darker_gray"/>
+
+    <!-- Message Sending Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="10dp"
+        android:text="SMS Manager App"
+        android:textAlignment="center"
+        android:textColor="@android:color/black"
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/idEdtphone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:hint="Enter phone number"
+        android:inputType="phone" />
+
+    <EditText
+        android:id="@+id/idEdtMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:hint="Enter Message" />
+
+    <Button
+        android:id="@+id/idBtnSendMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:padding="10dp"
+        android:text="Send Message"
+        android:textAllCaps="false" />
+</LinearLayout>
